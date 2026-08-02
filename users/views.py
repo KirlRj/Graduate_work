@@ -75,6 +75,10 @@ class ProfileView(APIView):
         if not User.objects.filter(referral_code=referral_code).exists():
             return Response({"error": "Инвайт-код не найден"}, status=status.HTTP_400_BAD_REQUEST)
 
+        if referral_code == user.referral_code:
+            return Response({"error": "Нельзя активировать свой собственный инвайт-код"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         user.users_referral_code = referral_code
         user.save()
         return Response({"message": "Инвайт-код активирован"})
