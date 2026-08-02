@@ -3,12 +3,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import render, redirect
+from django.views import View
 import random
 import time
 import string
 
 from .models import OTPCode, User
 from .serializers import SendCodeSerializer, VerifyCodeSerializer
+
 
 # Create your views here.
 class SendCodeView(APIView):
@@ -75,3 +78,71 @@ class ProfileView(APIView):
         user.users_referral_code = referral_code
         user.save()
         return Response({"message": "Инвайт-код активирован"})
+
+class SendCodeTemplateView(View):
+    def get(self, request):
+        return render(request, 'users/send_code.html')
+
+    def post(self, request):
+        phone = request.POST.get('phone')
+        code = str(random.randint(1000, 9999))
+        time.sleep(1)
+        OTPCode.objects.create(phone=phone, code=code)
+        request.session['phone'] = phone
+        request.session['code'] = code
+        return redirect('verify_code_template')
+
+
+class VerifyCodeTemplateView(View):
+    def get(self, request):
+        code = request.session.get('code')
+        phone = request.session.get('phone')
+        return render(request, 'users/verify_code.html', {'phone': phone, 'code': code})
+
+    def post(self, request):
+        phone = request.POST.get('phone')
+        code = request.POST.get('code')
+        otp = OTPCode.objects.filter(phone=phone, code=code).first()
+        if not otp:
+            return render(request, 'users/verify_code.html', {'phone': phone, 'error': 'Неверный код'})
+        otp.delete()
+        user, created = User.objects.get_or_create(phone=phone)
+        if created:
+            chars = string.ascii_uppercase + string.digits
+            user.referral_code = ''.join(random.choices(chars, k=6))
+            user.save()
+        request.session['user_id'] = str(user.id)
+        return redirect('profile_template')
+
+
+class ProfileTemplateView(View):
+    def get(self, request):
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return redirect('send_code_template')
+        user = User.objects.get(id=user_id)
+        referrals = User.objects.filter(users_referral_code=user.referral_code)
+        return render(request, 'users/profile.html', {'user': user, 'referrals': [u.phone for u in referrals]})
+
+    def post(self, request):
+        user_id = request.session.get('user_id')
+        user = User.objects.get(id=user_id)
+        referral_code = request.POST.get('referral_code')
+
+        if user.users_referral_code:
+            error = "Вы уже активировали инвайт-код"
+        elif referral_code == user.referral_code:
+            error = "Нельзя активировать свой собственный инвайт-код"
+        elif not User.objects.filter(referral_code=referral_code).exists():
+            error = "Инвайт-код не найден"
+        else:
+            user.users_referral_code = referral_code
+            user.save()
+            error = None
+
+        referrals = User.objects.filter(users_referral_code=user.referral_code)
+        return render(request, 'users/profile.html', {
+            'user': user,
+            'referrals': [u.phone for u in referrals],
+            'error': error
+        })

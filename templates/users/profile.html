@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль</title>
+</head>
+<body>
+    <h1>Профиль</h1>
+    <p>Телефон: {{ user.phone }}</p>
+    <p>Ваш инвайт-код: {{ user.referral_code }}</p>
+    <p>Активированный инвайт-код: {{ user.users_referral_code|default:"не активирован" }}</p>
+
+    <h2>Рефералы</h2>
+    {% if referrals %}
+        <ul>
+            {% for phone in referrals %}
+                <li>{{ phone }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет рефералов</p>
+    {% endif %}
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <h2>Активировать инвайт-код</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="referral_code" placeholder="ABC123" required>
+        <button type="submit">Активировать</button>
+    </form>
+</body>
+</html>

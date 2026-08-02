@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Авторизация</title>
+</head>
+<body>
+    <h1>Введите номер телефона</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="phone" placeholder="89991234567" required>
+        <button type="submit">Получить код</button>
+    </form>
+</body>
+</html>
