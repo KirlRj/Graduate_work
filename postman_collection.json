@@ -1,0 +1,55 @@
+{
+  "info": {
+    "name": "Graduate Work API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Send Code",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "http://localhost:8000/users/send-code/"},
+        "body": {
+          "mode": "raw",
+          "raw": "{\"phone\": \"89991234567\"}"
+        }
+      }
+    },
+    {
+      "name": "Verify Code",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "http://localhost:8000/users/verify-code/"},
+        "body": {
+          "mode": "raw",
+          "raw": "{\"phone\": \"89991234567\", \"code\": \"1234\"}"
+        }
+      }
+    },
+    {
+      "name": "Get Profile",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+        "url": {"raw": "http://localhost:8000/users/profile-view/"}
+      }
+    },
+    {
+      "name": "Activate Invite Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{access_token}}"}
+        ],
+        "url": {"raw": "http://localhost:8000/users/profile-view/"},
+        "body": {
+          "mode": "raw",
+          "raw": "{\"referral_code\": \"ABC123\"}"
+        }
+      }
+    }
+  ]
+}

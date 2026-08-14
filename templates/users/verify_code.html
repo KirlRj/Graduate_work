@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Подтверждение кода</title>
+</head>
+<body>
+    <h1>Введите код подтверждения</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="phone" value="{{ phone }}">
+        <input type="text" name="code" placeholder="1234" required>
+        <button type="submit">Подтвердить</button>
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+        {% if code %}
+            <p>Ваш код: <strong>{{ code }}</strong></p>
+        {% endif %}
+    </form>
+</body>
+</html>
