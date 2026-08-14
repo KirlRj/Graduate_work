@@ -1,7 +1,7 @@
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 
-from .models import OTPCode, User
+from .models import User
 
 phone_validator = RegexValidator(
     regex=r"^8\d{10}$",
@@ -9,20 +9,8 @@ phone_validator = RegexValidator(
 )
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "phone", "referral_code", "users_referral_code"]
-
-
-class OTPCodeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OTPCode
-        fields = ["phone", "code", "timestamp"]
-
-
 class SendCodeSerializer(serializers.Serializer):
-    phone = serializers.CharField(max_length=11)
+    phone = serializers.CharField(max_length=11, validators=[phone_validator])
 
 
 class VerifyCodeSerializer(serializers.Serializer):
@@ -30,5 +18,21 @@ class VerifyCodeSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=4)
 
 
-class SendCodeSerializer(serializers.Serializer):
-    phone = serializers.CharField(max_length=11, validators=[phone_validator])
+class TokenResponseSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+
+
+class MessageResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+
+
+class ProfileSerializer(serializers.Serializer):
+    phone = serializers.CharField()
+    referral_code = serializers.CharField()
+    users_referral_code = serializers.CharField(allow_null=True)
+    referrals = serializers.ListField(child=serializers.CharField())
+
+
+class ActivateInviteSerializer(serializers.Serializer):
+    referral_code = serializers.CharField(max_length=6)

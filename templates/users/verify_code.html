@@ -11,6 +11,9 @@
         <input type="hidden" name="phone" value="{{ phone }}">
         <input type="text" name="code" placeholder="1234" required>
         <button type="submit">Подтвердить</button>
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
         {% if code %}
             <p>Ваш код: <strong>{{ code }}</strong></p>
         {% endif %}

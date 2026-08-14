@@ -10,12 +10,25 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from drf_spectacular.utils import extend_schema
+
 from .models import OTPCode, User
-from .serializers import SendCodeSerializer, VerifyCodeSerializer
+from .serializers import (
+    ActivateInviteSerializer,
+    MessageResponseSerializer,
+    ProfileSerializer,
+    SendCodeSerializer,
+    TokenResponseSerializer,
+    VerifyCodeSerializer,
+)
 
 
-# Create your views here.
 class SendCodeView(APIView):
+    @extend_schema(
+        summary="Отправить OTP-код",
+        request=SendCodeSerializer,
+        responses={200: MessageResponseSerializer},
+    )
     def post(self, request):
         serializer = SendCodeSerializer(data=request.data)
         if serializer.is_valid():
@@ -30,6 +43,11 @@ class SendCodeView(APIView):
 
 
 class VerifyCodeView(APIView):
+    @extend_schema(
+        summary="Верифицировать OTP-код и получить JWT-токены",
+        request=VerifyCodeSerializer,
+        responses={200: TokenResponseSerializer},
+    )
     def post(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
         if serializer.is_valid():
@@ -64,6 +82,10 @@ class VerifyCodeView(APIView):
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="Получить профиль пользователя",
+        responses={200: ProfileSerializer},
+    )
     def get(self, request):
         user = self.request.user
         referrals = User.objects.filter(users_referral_code=user.referral_code)
@@ -76,6 +98,11 @@ class ProfileView(APIView):
             }
         )
 
+    @extend_schema(
+        summary="Активировать инвайт-код",
+        request=ActivateInviteSerializer,
+        responses={200: MessageResponseSerializer},
+    )
     def post(self, request):
         user = request.user
         referral_code = request.data.get("referral_code")
@@ -104,10 +131,11 @@ class ProfileView(APIView):
 
 class SendCodeTemplateView(View):
     def get(self, request):
+        request.session.flush()
         return render(request, "users/send_code.html")
 
     def post(self, request):
-        phone = request.POST.get("phone")
+        phone = request.POST.get("phone", "").strip()
         code = str(random.randint(1000, 9999))
         time.sleep(1)
         OTPCode.objects.create(phone=phone, code=code)
@@ -130,7 +158,7 @@ class VerifyCodeTemplateView(View):
             return render(
                 request,
                 "users/verify_code.html",
-                {"phone": phone, "error": "Неверный код"},
+                {"phone": phone, "code": request.session.get("code"), "error": "Неверный код"},
             )
         otp.delete()
         user, created = User.objects.get_or_create(phone=phone)
